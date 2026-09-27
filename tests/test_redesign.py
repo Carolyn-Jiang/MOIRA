@@ -41,7 +41,7 @@ from utils.statarb import (
 )
 from utils.engine import (
     simulate_window, decide_acceptance, parameter_convergence,
-    _week_news_items, simulate_discovery_window, _cadence_news_items,
+    _week_news_items, simulate_discovery_window, _session_news_items,
 )
 from llm.policy_agent import (
     PolicyAgent, Policy, PairChoice, BreakAssessment, PairReflectionMemory, NO_TRADE,
@@ -1529,16 +1529,15 @@ class Test34DiscoveryEngine(unittest.TestCase):
         self.assertTrue(all(r.action == "FLAT" and r.no_trade for r in res.records))
         self.assertAlmostEqual(res.cumulative_pnl, 0.0, places=9)   # cash-only: flat PnL
 
-    def test_news_window_excludes_decision_day(self):
-        from datetime import timedelta
-        syms = ["A", "B"]
-        # env dates Feb-1..Feb-6 carry news "day0".."day5"
-        env = {date(2025, 2, 1) + timedelta(days=i):
-               {"price": {"A": 100, "B": 100}, "news": {"A": [f"day{i}"]}} for i in range(6)}
-        win = _cadence_news_items(env, date(2025, 2, 1), date(2025, 2, 4), syms)  # (Feb-1, Feb-3]
-        self.assertIn("day1", win["A"]); self.assertIn("day2", win["A"])  # Feb-2, Feb-3
-        self.assertNotIn("day3", win["A"])                                # Feb-4 = T, excluded
-        self.assertNotIn("day0", win["A"])                                # Feb-1 = prev, excluded
+    def test_session_news_uses_aligned_bucket_without_mutating_it(self):
+        previous, current, future = date(2025, 2, 3), date(2025, 2, 4), date(2025, 2, 5)
+        env = {previous: {"news": {"A": ["stale"]}},
+               current: {"news": {"a": ["prior-session publication"]}},
+               future: {"news": {"A": ["future-only"]}}}
+        items = _session_news_items(env, current, ["A", "B"])
+        self.assertEqual(items, {"A": ["prior-session publication"], "B": []})
+        items["A"].append("caller mutation")
+        self.assertEqual(env[current]["news"]["a"], ["prior-session publication"])
 
     def test_prev_trading_day(self):
         from utils.engine import _prev_trading_day

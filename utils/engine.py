@@ -785,35 +785,32 @@ def _week_news_items(
 
 
 def _prev_trading_day(env_data: Dict[date, Dict], current: date) -> Optional[date]:
-    """The most recent trading session strictly before ``current`` (Step 4).
+    """Previous loaded session, used to log the inclusive news-window start.
 
-    Used as the lower bound of the Direction-Discovery news window
-    ``(previous trading day, T-1]`` so only news that arrived since the last session
-    (e.g. for a Monday decision: the prior weekend) is visible -- never future news,
-    never news from day T. Returns ``None`` if there is no earlier session.
+    Environment keys are trading sessions, not news publication dates. The data
+    loader has already aligned news from [previous session, current) to current.
+    Returns ``None`` if there is no earlier loaded session.
     """
     earlier = [d for d in env_data.keys() if d < current]
     return max(earlier) if earlier else None
 
 
-def _cadence_news_items(
-    env_data: Dict[date, Dict], prev_date: Optional[date], current: date,
-    symbols: Sequence[str]
+def _session_news_items(
+    env_data: Dict[date, Dict], current: date, symbols: Sequence[str]
 ) -> Dict[str, List[str]]:
-    """News window aligned to the decision cadence: items published in
-    ``(prev_date, current - 1]`` -- i.e. strictly BEFORE the current decision day
-    ``current`` and after the previous decision day ``prev_date``. No information from
-    ``current`` or later may be used (causal). ``prev_date=None`` includes everything
-    before ``current``.
+    """Read the current session's already-causal news without shifting it again.
+
+    All production loaders put publications from [previous session, current) in
+    ``env_data[current]["news"]``, including weekend and holiday-gap items. Thus
+    reading the current row exposes only earlier publications, not same-day news.
+    Filtering environment keys as publication dates would erase or delay news.
     """
+    day_news = env_data.get(current, {}).get("news", {}) or {}
     items: Dict[str, List[str]] = {s: [] for s in symbols}
-    for d, rec in env_data.items():
-        if d < current and (prev_date is None or d > prev_date):
-            day_news = rec.get("news", {}) or {}
-            for s in symbols:
-                vals = day_news.get(s) or day_news.get(s.lower()) or []
-                if isinstance(vals, list):
-                    items[s].extend(vals)
+    for s in symbols:
+        vals = day_news.get(s) or day_news.get(s.lower()) or []
+        if isinstance(vals, list):
+            items[s].extend(vals)
     return items
 
 
@@ -910,7 +907,8 @@ def simulate_discovery_window(
     At each pair-selection event permitted by the cadence below:
       * Stage 1 (rule-based): ``discovery_provider(as_of, prices)`` returns the Top-5
         pairs ranked by 10Y cointegration (each ``{"pair":(A,B), "pc": StatArbPair}``).
-      * News window ``(previous TRADING DAY, T-1]`` is built per candidate pair.
+      * Read news aligned by the loader from ``[previous trading day, T)`` for
+        each candidate pair; the current environment row is already causal.
       * Stage 2 (merged LLM/offline call): ``agent.discover_direction`` picks ONE pair +
         an action (LONG_SHORT/SHORT_LONG/FLAT) + a reason.
     Daily direction decisions update the action while the selected pair is held. Sizing:
@@ -1019,8 +1017,7 @@ def simulate_discovery_window(
             top5 = [c for c in top5
                     if "/".join(tuple(c["pair"])) not in exclude
                     and "/".join(tuple(c["pair"])[::-1]) not in exclude]
-        prev_td = _prev_trading_day(env_data, dd_date)
-        win_news = _cadence_news_items(env_data, prev_td, dd_date, symbols)
+        win_news = _session_news_items(env_data, dd_date, symbols)
         hist_dates = sorted(price_history.keys())
         prev_prices = (price_history[hist_dates[-2]]["price"] if len(hist_dates) >= 2 else {})
         out = []
@@ -1039,7 +1036,7 @@ def simulate_discovery_window(
         """Build the single-candidate dict for the ACTIVE pair (daily Direction mode)."""
         a, b = pair
         prev_td = _prev_trading_day(env_data, dd_date)
-        win_news = _cadence_news_items(env_data, prev_td, dd_date, symbols)
+        win_news = _session_news_items(env_data, dd_date, symbols)
         hist_dates = sorted(price_history.keys())
         prev_prices = (price_history[hist_dates[-2]]["price"] if len(hist_dates) >= 2 else {})
         tw_z, _bw = compute_spread_z(price_history, pair, lookback)
@@ -1090,9 +1087,8 @@ def simulate_discovery_window(
             # evaluated at the next validation day regardless of whether the pair that
             # broke is still active or survived to "its own" validation day.
             event_type = "scheduled_break_validation" if is_validation else "daily_risk_check"
-            prev_td = _prev_trading_day(env_data, d)
             mon_news = _pair_news_summary(
-                _cadence_news_items(env_data, prev_td, d, symbols), cur_pair)
+                _session_news_items(env_data, d, symbols), cur_pair)
             sig_z, beta_mon = compute_spread_z(price_history, cur_pair, lookback)
             recent_corr = _recent_log_corr(price_history, cur_pair)
             vol_ratio = _recent_spread_vol_ratio(
