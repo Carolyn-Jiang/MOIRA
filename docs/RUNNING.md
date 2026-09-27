@@ -69,7 +69,7 @@ python -m experiments.run_ablations --check-only
 python -m experiments.run_ablations --ablations a1 a2 a3 a4 --seeds 1103 --output-dir runs/ablations
 ```
 
-The two settings are GPT-4.1-mini/Beta and GPT-5.4-mini/No-Beta. A1 uses 28 training and 304 test decisions; A2 uses 28 and 75. A3/A4 use the primary 27/75 windows and save their own matched full controls. A3 shares one warmup and initial reflection prompt, and uses identical pair-quality memory at test entry. A4 shares the trained prompt, pair-quality memory and initial pair, retaining monitoring but disabling replacement. All new test runs settle the last decision using the following session's prices. Historical paper results are retained as reported, including their original settlement conventions.
+The two settings are GPT-4.1-mini/Beta and GPT-5.4-mini/No-Beta. A1 uses 28 training and 304 test decisions; A2 uses 28 and 75. A3/A4 use the primary 27/75 windows and save their own matched full controls. A3 shares one warmup and initial reflection prompt, and uses identical pair-quality memory at test entry. A4 shares the trained prompt, pair-quality memory and initial pair, retaining monitoring but disabling replacement. All new test runs settle the last decision using the following session's prices.
 
 ## Inputs and local output
 
@@ -94,3 +94,29 @@ python -m experiments.run_baselines --dataset herculean_regime --output-dir runs
 ```
 
 These run LS, SL and EW on the causally selected fixed pair under both exposures. The main model runner also evaluates matched-timeline controls automatically. To evaluate a separate local decision CSV, add `--timeline path/to/decision_log.csv`; its dates must match every test decision.
+
+
+## EG+Z and EG-DDQN
+
+Run from the repository root; neither baseline makes model calls:
+
+```bash
+python -m experiments.run_engle_granger_baseline --studies main a1 a2 --output-dir runs/eg-z
+python -m experiments.run_eg_ddqn_baseline --studies main a1 a2 --seeds 1103 2207 3301 --output-dir runs/eg-ddqn
+```
+
+EG+Z enters at residual Z = ±1 and exits within 0.25. EG-DDQN uses a NumPy Double DQN (32 hidden units, 600 training episodes) and freezes the policy during testing. Both use the shared price/news windows, exposure rules and final price-only settlement. The main pair is selected from the ten years strictly before testing; A1/A2 use the matched fixed pairs AMZN/MSFT and AAPL/MSFT. These baselines retain a fixed pair throughout the test window.
+
+Inputs are frozen and hashed per study; rerunning the same command skips completed cells. Results remain under `runs/`: `comparison.csv` contains CR, Sharpe and MDD (CR/MDD as fractions), and each study has `equity.csv` and local decision output. DDQN also saves per-metric medians. These outputs never replace the manuscript tables or figures.
+
+For a cheap CPU execution check, use a separate directory:
+
+```bash
+python -m experiments.run_eg_ddqn_baseline --studies main --seeds 1103 --episodes 4 --output-dir runs/check-eg-ddqn
+```
+
+A completed main cell prints `BASELINE_OK ... test_steps=75`; its trajectory contains 76 equity observations. The four-episode check is not a reported experiment.
+
+## FinMem
+
+See [the fixed-pair runner](../baselines/finmem_fixed_pair/README.md) for installation, preparation, warmup, testing, checkpoint recovery and evaluation. It uses GPT-4.1-mini and an embedding endpoint; unlike the two numeric baselines, a full run makes paid API calls. All checkpoints, generated data and logs stay local.

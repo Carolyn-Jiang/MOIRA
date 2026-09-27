@@ -38,7 +38,7 @@ The main experiment has 27 training sessions and 75 test decisions. The followin
 
 ## Results reported in the paper
 
-CR and MDD are percentages; Sharpe is unitless. These are the paper’s selected results, not averages over seeds. The preserved figures and tables are a paper snapshot; earlier hosted-model and ablation runs have not been rerun with the unified code in this release.
+CR and MDD are percentages; Sharpe is unitless. These are the paper’s selected results, not averages over seeds. All reported results and figures follow the Overleaf manuscript.
 
 | Model / baseline | No-Beta CR | Sharpe | MDD | Beta CR | Sharpe | MDD |
 |---|---:|---:|---:|---:|---:|---:|
@@ -289,7 +289,8 @@ Original paper assets and image previews are in [`paper/figures/`](paper/figures
 - [`experiments/run_main.py`](experiments/run_main.py): shared main runner for Llama, Qwen, OpenAI, DeepSeek and Gemini.
 - [`experiments/run_ablations.py`](experiments/run_ablations.py): A1–A4 using the same engine and causal price windows.
 - [`experiments/run_baselines.py`](experiments/run_baselines.py), [`experiments/baselines.py`](experiments/baselines.py): fixed-pair and matched-timeline directional controls.
+- [`experiments/run_engle_granger_baseline.py`](experiments/run_engle_granger_baseline.py): EG+Z with rolling spread entry/exit rules.
+- [`experiments/run_eg_ddqn_baseline.py`](experiments/run_eg_ddqn_baseline.py), [`experiments/eg_ddqn.py`](experiments/eg_ddqn.py): EG-DDQN training and frozen test policy.
+- [`baselines/finmem_fixed_pair/`](baselines/finmem_fixed_pair/): FinMem fixed-pair adapter, memory, inference, checkpoints and evaluation.
 - [`llm/`](llm/), [`utils/`](utils/): prompts, provider adapters, memory, simulation and metrics.
 - [Run commands](docs/RUNNING.md). Generated runs and credentials remain local and are excluded from this repository.
-
-The paper reports EG+Z, EG-DDQN and FinMem results as well. Their experiment-specific source has not yet been recovered, so those implementations are not included in this release.

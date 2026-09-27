@@ -1,0 +1,108 @@
+{
+  "chat_config": {
+    "chat_model": "gpt-4.1-mini",
+    "chat_model_type": "chat",
+    "chat_model_inference_engine": "openai",
+    "chat_system_message": "You are a financial decision agent evaluating the fixed equity pair AMZN/MSFT. Follow the action mapping in the user prompt exactly and return only valid JSON.",
+    "chat_parameters": {
+      "temperature": 0.0,
+      "seed": 3301
+    },
+    "chat_max_new_token": 1000,
+    "chat_request_timeout": 180,
+    "chat_max_retries": 5,
+    "chat_openai_endpoint": "https://api.openai.com/v1/chat/completions"
+  },
+  "emb_config": {
+    "emb_model_name": "text-embedding-3-large",
+    "request_endpoint": "https://api.openai.com/v1/embeddings",
+    "emb_size": 3072,
+    "embedding_timeout": 180
+  },
+  "env_config": {
+    "trading_symbols": [
+      "AMZN__MSFT"
+    ],
+    "warmup_start_time": "2024-12-02",
+    "warmup_end_time": "2025-01-13",
+    "test_start_time": "2025-01-14",
+    "test_end_time": "2026-04-01",
+    "momentum_window_size": 3,
+    "env_data_path": {
+      "AMZN__MSFT": "data/amzn_msft_a1_herculean.json"
+    }
+  },
+  "portfolio_config": {
+    "trading_symbols": [
+      "AMZN__MSFT"
+    ],
+    "type": "single-asset",
+    "look_back_window_size": 3
+  },
+  "agent_config": {
+    "agent_name": "finmem_a1_gpt41mini_amzn_msft",
+    "trading_symbols": [
+      "AMZN__MSFT"
+    ],
+    "character_string": {
+      "AMZN__MSFT": "You manage the fixed equity pair AMZN/MSFT. AMZN is always the first leg and MSFT is always the second leg. Your task is relative-value trading, not single-stock direction prediction. The pair cannot be replaced or reordered."
+    },
+    "top_k": 5,
+    "memory_db_config": {
+      "memory_db_endpoint": "local:results/finmem_a1_gpt41mini/qdrant",
+      "memory_importance_upper_bound": 100.0,
+      "memory_importance_score_update_step": 18.0,
+      "trading_symbols": [
+        "AMZN__MSFT"
+      ],
+      "short": {
+        "db_name": "short",
+        "importance_init_val": 50.0,
+        "decay_recency_factor": 3.0,
+        "decay_importance_factor": 0.92,
+        "clean_up_recency_threshold": 0.05,
+        "clean_up_importance_threshold": 5.0,
+        "jump_upper_threshold": 55.0
+      },
+      "mid": {
+        "db_name": "mid",
+        "importance_init_val": 60.0,
+        "decay_recency_factor": 90.0,
+        "decay_importance_factor": 0.96,
+        "clean_up_recency_threshold": 0.05,
+        "clean_up_importance_threshold": 5.0,
+        "jump_lower_threshold": 55.0,
+        "jump_upper_threshold": 85.0
+      },
+      "long": {
+        "db_name": "long",
+        "importance_init_val": 90.0,
+        "decay_recency_factor": 365.0,
+        "decay_importance_factor": 0.96,
+        "clean_up_recency_threshold": 0.05,
+        "clean_up_importance_threshold": 5.0,
+        "jump_lower_threshold": 85.0
+      },
+      "reflection": {
+        "db_name": "reflection",
+        "importance_init_val": 80.0,
+        "decay_recency_factor": 365.0,
+        "decay_importance_factor": 0.98,
+        "clean_up_recency_threshold": 0.05,
+        "clean_up_importance_threshold": 5.0,
+        "similarity_threshold": 0.95
+      }
+    }
+  },
+  "meta_config": {
+    "run_name": "finmem_a1_gpt41mini_amzn_msft_seed3301",
+    "decision_end_time": "2026-03-31",
+    "momentum_window_size": 3,
+    "warmup_checkpoint_save_path": "results/finmem_a1_gpt41mini/model/AMZN_MSFT/warmup_checkpoint",
+    "warmup_output_save_path": "results/finmem_a1_gpt41mini/model/AMZN_MSFT/warmup_output",
+    "test_checkpoint_save_path": "results/finmem_a1_gpt41mini/model/AMZN_MSFT/test_checkpoint",
+    "test_output_save_path": "results/finmem_a1_gpt41mini/model/AMZN_MSFT/test_output",
+    "result_save_path": "results/finmem_a1_gpt41mini/model/AMZN_MSFT/final_result",
+    "log_save_path": "results/finmem_a1_gpt41mini/model/AMZN_MSFT/log"
+  }
+}

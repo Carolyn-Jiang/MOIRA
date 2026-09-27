@@ -116,16 +116,7 @@ def simulate_baseline_window(
         held.append(pair)
 
     if settlement_date is not None:
-        from utils.data_utils import next_trading_day
-        if not dates or settlement_date != next_trading_day(dates[-1]):
-            raise ValueError("Settlement must follow the last baseline decision")
-        prices = env_data[settlement_date]["price"]
-        import math
-        if any(not math.isfinite(float(prices.get(s, float("nan"))))
-               or float(prices.get(s, 0)) <= 0 for s in symbols):
-            raise ValueError("Missing valid baseline settlement prices")
-        portfolio.step(prices, _zeroed_targets(symbols))
-        norm = float(portfolio.normalized_equity_history[-1])
+        norm = settle_baseline(portfolio, dates, env_data, symbols, settlement_date)
         reward = (norm / prev_norm - 1.0) if prev_norm > 0 else 0.0
         norm_equity.append(norm)
         daily_pnls.append(reward)
@@ -135,6 +126,143 @@ def simulate_baseline_window(
                    if held[j] is not None and held[j - 1] is not None and held[j] != held[j - 1])
     return {"normalized_equity": norm_equity, "daily_pnls": daily_pnls,
             "cumulative_pnl": cum, "held": held, "n_switches": switches}
+
+
+def settle_baseline(portfolio, dates, env_data, symbols, settlement_date):
+    """Value and close the final target without creating an extra decision."""
+    import math
+    from utils.data_utils import next_trading_day
+    if not dates or settlement_date != next_trading_day(dates[-1]):
+        raise ValueError("Settlement must follow the last baseline decision")
+    prices = env_data[settlement_date]["price"]
+    if any(not math.isfinite(float(prices.get(s, float("nan"))))
+           or float(prices.get(s, 0)) <= 0 for s in symbols):
+        raise ValueError("Missing valid baseline settlement prices")
+    portfolio.step(prices, _zeroed_targets(symbols))
+    return float(portfolio.normalized_equity_history[-1])
+
+
+DEFAULT_ZSCORE_ENTRY = 1.0
+DEFAULT_ZSCORE_EXIT = 0.25
+
+
+def engle_granger_zscore_action(
+    zscore: float,
+    current_action: Optional[str],
+    *,
+    entry_z: float = DEFAULT_ZSCORE_ENTRY,
+    exit_band: float = DEFAULT_ZSCORE_EXIT,
+) -> Optional[str]:
+    """Causal mean-reversion state transition for an Engle--Granger spread.
+
+    Positive residual Z-scores mean leg A is rich, so the strategy shorts A and
+    longs B. Negative residual Z-scores imply the opposite position. An open
+    position is retained until the residual returns to the pre-specified exit band;
+    ``None`` denotes an explicit flat target.
+    """
+    if entry_z <= 0:
+        raise ValueError("entry_z must be positive")
+    if exit_band < 0 or exit_band >= entry_z:
+        raise ValueError("exit_band must satisfy 0 <= exit_band < entry_z")
+
+    z = float(zscore)
+    if current_action == LONG_SHORT:
+        return None if z >= -exit_band else LONG_SHORT
+    if current_action == SHORT_LONG:
+        return None if z <= exit_band else SHORT_LONG
+    if z <= -entry_z:
+        return LONG_SHORT
+    if z >= entry_z:
+        return SHORT_LONG
+    return None
+
+
+def simulate_engle_granger_zscore(
+    *,
+    dates: Sequence[date],
+    env_data: Dict[date, Dict],
+    symbols: Sequence[str],
+    pair: Tuple[str, str],
+    beta_hedged: bool = False,
+    lookback: int = 20,
+    entry_z: float = DEFAULT_ZSCORE_ENTRY,
+    exit_band: float = DEFAULT_ZSCORE_EXIT,
+    history_seed: Optional[Dict[date, Dict]] = None,
+    gross_allocation: float = 1.0,
+    settlement_date: Optional[date] = None,
+) -> Dict[str, object]:
+    """Run a deterministic Engle--Granger + rolling residual Z-score baseline.
+
+    ``pair`` is selected independently using Engle--Granger statistics before this
+    simulation. At session ``t``, the rolling OLS hedge ratio and residual Z-score
+    use only prices available through ``t``; the resulting target earns PnL from
+    the next price observation through the shared portfolio engine.
+    """
+    symbols = list(symbols)
+    portfolio = PortfolioManager(symbols, initial_cash=1.0)
+    price_history: Dict[date, Dict[str, Dict[str, float]]] = {}
+    if history_seed:
+        for d in sorted(history_seed.keys()):
+            price_history[d] = {"price": history_seed[d]["price"]}
+
+    norm_equity: List[float] = []
+    daily_pnls: List[float] = []
+    actions: List[str] = []
+    zscores: List[float] = []
+    hedge_ratios: List[float] = []
+    current_action: Optional[str] = None
+    prev_norm, cum = 1.0, 0.0
+
+    for d in dates:
+        prices = env_data[d]["price"]
+        price_history[d] = {"price": prices}
+        zscore, beta_raw = compute_spread_z(price_history, pair, lookback)
+        current_action = engle_granger_zscore_action(
+            zscore, current_action, entry_z=entry_z, exit_band=exit_band)
+
+        target = _zeroed_targets(symbols)
+        beta = effective_hedge_ratio(beta_raw, pair=pair, as_of=d.isoformat())
+        if current_action is not None:
+            pv = max(portfolio._compute_equity(prices), 1e-9)
+            target.update(size_pair_position_fractional(
+                prices=prices,
+                pair=pair,
+                portfolio_value=pv,
+                action=_ACTION_MAP[current_action],
+                gross_fraction=gross_allocation,
+                hedge_ratio=(beta if beta_hedged else 1.0),
+            ))
+
+        state = portfolio.step(prices, target)
+        if state.get("rejected_target"):
+            portfolio.step(prices, _zeroed_targets(symbols))
+            current_action = None
+        norm = float(portfolio.normalized_equity_history[-1])
+        reward = (norm / prev_norm - 1.0) if prev_norm > 0 else 0.0
+        prev_norm, cum = norm, cum + reward
+        norm_equity.append(norm)
+        daily_pnls.append(reward)
+        actions.append(current_action or "FLAT")
+        zscores.append(float(zscore))
+        hedge_ratios.append(float(beta))
+
+    if settlement_date is not None:
+        norm = settle_baseline(portfolio, dates, env_data, symbols, settlement_date)
+        reward = (norm / prev_norm - 1.0) if prev_norm > 0 else 0.0
+        norm_equity.append(norm)
+        daily_pnls.append(reward)
+        cum += reward
+
+    return {
+        "normalized_equity": norm_equity,
+        "daily_pnls": daily_pnls,
+        "cumulative_pnl": cum,
+        "held": [pair if action != "FLAT" else None for action in actions],
+        "actions": actions,
+        "zscores": zscores,
+        "hedge_ratios": hedge_ratios,
+        "n_switches": 0,
+    }
 
 
 def _schedule_from_records(records) -> Callable[[int], Optional[Tuple[str, str]]]:
