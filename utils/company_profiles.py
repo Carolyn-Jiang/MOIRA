@@ -1,70 +1,45 @@
-"""Static company business + 2024 revenue context for the trading universe (Step 5).
+"""Static business descriptions for pair-selection and direction prompts.
 
-SOURCE & CAVEAT
----------------
-These are APPROXIMATE figures compiled from each company's public annual report / Form
-10-K (fiscal year noted per company; several tech firms do not use a calendar fiscal
-year). They are rounded to the nearest ~$0.1B and are intended as qualitative business
-context for the LLM, NOT as precise accounting inputs. **Verify against the official
-filing before any publication.** No values here are fabricated; where a fiscal year does
-not align to calendar 2024 the basis is stated explicitly.
-
-Each entry: ticker -> {name, business, revenue_2024 (text, with FY basis)}.
+Undated annual revenue figures are deliberately excluded: without release-time
+metadata, even a fiscal year preceding a decision can contain unavailable facts.
 """
 from __future__ import annotations
 
-import re
 from typing import Dict, Sequence
 
 COMPANY_PROFILES: Dict[str, Dict[str, str]] = {
     "AAPL": {"name": "Apple Inc.",
-             "business": "Consumer electronics (iPhone, Mac, iPad, Watch) and high-margin Services (App Store, iCloud, payments).",
-             "revenue_2024": "~$391B (FY2024, ended Sep 2024)"},
+             "business": "Consumer electronics (iPhone, Mac, iPad, Watch) and high-margin Services (App Store, iCloud, payments)."},
     "ADBE": {"name": "Adobe Inc.",
-             "business": "Subscription creative & document software (Creative Cloud, Document Cloud) and digital-experience/marketing software.",
-             "revenue_2024": "~$21.5B (FY2024, ended Nov 2024)"},
+             "business": "Subscription creative & document software (Creative Cloud, Document Cloud) and digital-experience/marketing software."},
     "AMZN": {"name": "Amazon.com, Inc.",
-             "business": "E-commerce marketplace and logistics, AWS cloud computing, and advertising.",
-             "revenue_2024": "~$638B (FY2024, calendar)"},
+             "business": "E-commerce marketplace and logistics, AWS cloud computing, and advertising."},
     "BMRN": {"name": "BioMarin Pharmaceutical Inc.",
-             "business": "Biotech developing enzyme-replacement and gene therapies for rare genetic diseases.",
-             "revenue_2024": "~$2.85B (FY2024, calendar)"},
+             "business": "Biotech developing enzyme-replacement and gene therapies for rare genetic diseases."},
     "CRM": {"name": "Salesforce, Inc.",
-            "business": "Cloud-based CRM and enterprise SaaS (sales, service, marketing, analytics, Slack).",
-            "revenue_2024": "~$34.9B (FY2024, ended Jan 2024)"},
+            "business": "Cloud-based CRM and enterprise SaaS (sales, service, marketing, analytics, Slack)."},
     "GOOGL": {"name": "Alphabet Inc. (Google)",
-              "business": "Search and digital advertising, YouTube, Google Cloud, and Android/Play.",
-              "revenue_2024": "~$350B (FY2024, calendar)"},
+              "business": "Search and digital advertising, YouTube, Google Cloud, and Android/Play."},
     "META": {"name": "Meta Platforms, Inc.",
-             "business": "Social-media advertising (Facebook, Instagram, WhatsApp) and Reality Labs (AR/VR).",
-             "revenue_2024": "~$164.5B (FY2024, calendar)"},
+             "business": "Social-media advertising (Facebook, Instagram, WhatsApp) and Reality Labs (AR/VR)."},
     "MSFT": {"name": "Microsoft Corporation",
-             "business": "Productivity software (Office/365), Azure cloud, Windows, and gaming (Xbox).",
-             "revenue_2024": "~$245B (FY2024, ended Jun 2024)"},
+             "business": "Productivity software (Office/365), Azure cloud, Windows, and gaming (Xbox)."},
     "NVDA": {"name": "NVIDIA Corporation",
-             "business": "GPUs and AI accelerators; data-center compute, gaming, and professional visualization.",
-             "revenue_2024": "~$60.9B (FY2024, ended Jan 2024); ~$130.5B (FY2025, ended Jan 2025)"},
+             "business": "GPUs and AI accelerators; data-center compute, gaming, and professional visualization."},
     "TSLA": {"name": "Tesla, Inc.",
-             "business": "Electric vehicles, energy storage/solar, and related software/services.",
-             "revenue_2024": "~$97.7B (FY2024, calendar)"},
+             "business": "Electric vehicles, energy storage/solar, and related software/services."},
 }
 
 
 def profile_text(ticker: str) -> str:
-    """One-line business + 2024-revenue context for a ticker (or a neutral fallback)."""
+    """One-line business context; no unversioned financial results reach the LLM."""
     p = COMPANY_PROFILES.get(str(ticker).upper())
     if not p:
         return f"{ticker}: (no company profile on file)"
-    # Keep source fiscal dates above for provenance, but omit them from model input.
-    periods = p["revenue_2024"].split("; ")
-    revenues = []
-    for i, period in enumerate(periods, 1):
-        label = f"reported fiscal period {i}" if len(periods) > 1 else "reported fiscal period"
-        revenues.append(re.sub(r"\(FY\d{4}[^)]*\)", f"({label})", period))
-    return f"{ticker} — {p['name']}: {p['business']} Historical revenue {'; '.join(revenues)}."
+    return f"{ticker} — {p['name']}: {p['business']}"
 
 
 def profiles_block(tickers: Sequence[str]) -> str:
-    """A 'COMPANY CONTEXT' block for the given tickers, for prompt injection."""
-    lines = [profile_text(t) for t in tickers]
-    return "COMPANY CONTEXT (business + historical revenue):\n" + "\n".join(f"- {l}" for l in lines)
+    """Render stable business context without annual financial-result leakage."""
+    return "COMPANY CONTEXT (business only):\n" + "\n".join(
+        f"- {profile_text(t)}" for t in tickers)

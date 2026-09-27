@@ -1249,7 +1249,7 @@ class PolicyAgent:
 
         ``candidates`` is the ranked Top-5 (rank 1 = strongest 10Y cointegration). The LLM
         (openai) sees per-candidate spread-state + relative news + COMPANY CONTEXT (business
-        + historical revenue) + Pair Selection memory, and returns ``{selected_pair,
+        only) + Pair Selection memory, and returns ``{selected_pair,
         pair_selection_reason}``. The chosen pair's daily ACTION is decided separately by
         ``discover_daily_direction`` (Direction-Discovery prompt). The offline backend uses
         a deterministic rule. The returned ``action`` is a placeholder (FLAT) -- the engine

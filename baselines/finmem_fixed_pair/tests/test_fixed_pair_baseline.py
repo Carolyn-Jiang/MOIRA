@@ -161,3 +161,55 @@ def test_memory_checkpoint_restores_with_mocked_inference(tmp_path, monkeypatch)
         assert (tmp_path / "restored/portfolio_checkpoint.json").exists()
     finally:
         restored.memory_db.connection_client.close()
+
+
+def test_test_prompt_masks_dates_and_never_uses_next_step_return():
+    constructor = VLLMPromptConstructor()
+    kwargs = dict(cur_date=date(2025, 2, 12), cur_step=1, symbol="BMRN__META",
+                  run_mode=RunMode.TEST, short_memory=["News from February 11, 2025"],
+                  short_memory_id=[1], mid_memory=None, mid_memory_id=None,
+                  long_memory=None, long_memory_id=None, reflection_memory=None,
+                  reflection_memory_id=None, momentum=1)
+    first = constructor(future_record=0.123456, **kwargs)
+    second = constructor(future_record=-0.987654, **kwargs)
+    assert first == second
+    assert "step 001" in first
+    assert "2025" not in first
+    assert "0.123456" not in first and "0.987654" not in first
+    warmup = constructor(future_record=0.123456, **{**kwargs, "run_mode": RunMode.WARMUP})
+    assert "0.123456" in warmup
+
+
+def test_test_agent_boundary_discards_future_prices(monkeypatch):
+    from src.agent import FinMemAgent
+    from src.market_env import OneDayMarketInfo
+    from src.utils import TaskType
+    observation = OneDayMarketInfo(cur_step=1, cur_date=date(2025, 2, 12),
+        cur_price={"PAIR": 100.}, cur_news={"PAIR": []},
+        cur_future_price_diff={"PAIR": .987654}, cur_momentum={"PAIR": 1},
+        cur_symbol=["PAIR"], termination_flag=False)
+    seen = []
+    agent = object.__new__(FinMemAgent)
+    def capture(market_info):
+        seen.append(market_info)
+        raise RuntimeError("boundary captured")
+    monkeypatch.setattr(agent, "_handling_new_information", capture)
+    with pytest.raises(RuntimeError, match="boundary captured"):
+        agent.step(observation, RunMode.TEST, TaskType.SingleAsset)
+    assert seen[0].cur_future_price_diff is None
+    assert observation.cur_future_price_diff == {"PAIR": .987654}
+
+
+def test_environment_resumes_actual_step_number(tmp_path):
+    import json
+    from src.market_env import MarketEnv
+    data = {f"2025-02-{day:02d}": {"prices": 100. + day, "news": []}
+            for day in (12, 13, 14)}
+    path = tmp_path / "data.json"
+    path.write_text(json.dumps(data))
+    env = MarketEnv(env_data_path={"PAIR": str(path)}, start_date="2025-02-12",
+                    end_date="2025-02-14", symbol=["PAIR"], momentum_window_size=3)
+    assert env.step().cur_step == 1
+    env.save_checkpoint(str(tmp_path / "checkpoint"))
+    resumed = MarketEnv.load_checkpoint(str(tmp_path / "checkpoint"))
+    assert resumed.step().cur_step == 2

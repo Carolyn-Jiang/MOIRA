@@ -13,6 +13,7 @@ from .utils import ensure_path
 
 # return type
 class OneDayMarketInfo(BaseModel):
+    cur_step: Union[int, None] = None
     cur_date: Union[date, None]
     cur_price: Union[Dict[str, float], None]
     cur_news: Union[Dict[str, Union[List[str], None]], None]
@@ -161,6 +162,7 @@ class MarketEnv:
 
         try:
             return_market_info = OneDayMarketInfo(
+                cur_step=self.day_count,
                 cur_date=market_date_info,
                 cur_price=market_price_info,
                 cur_news=market_news_info,
@@ -202,6 +204,7 @@ class MarketEnv:
             "end_date": self.end_date,
             "symbol": self.symbols,
             "momentum_window_size": self.momentum_window,
+            "day_count": self.day_count,
         }
         with open(os.path.join(path, "env_checkpoint.json"), "w") as f:
             # json.dump(state_dict, f)
@@ -228,5 +231,6 @@ class MarketEnv:
             symbol=env_config["symbol"],
             momentum_window_size=env_config["momentum_window_size"],
         )
+        env.day_count = env_config.get("day_count", 0)
         logger.info(f"ENV-Environment loaded from {path}")
         return env

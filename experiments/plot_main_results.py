@@ -323,7 +323,7 @@ def generate_sizing_comparisons(by_mode, output):
     """Compare separately selected Beta/No-Beta runs, displaying both seed IDs.
 
     These are descriptive differences between selected outcomes, not paired-seed
-    causal estimates. The full five-seed metrics remain in all_seeds.csv.
+    causal estimates. The complete per-seed metrics remain in all_seeds.csv.
     """
     import matplotlib
     matplotlib.use("Agg")

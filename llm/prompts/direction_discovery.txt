@@ -34,7 +34,7 @@ You must consider:
 6. latest available news,
 7. relative news between Asset A and Asset B,
 8. company business context,
-9. historical revenue context,
+9. economic relationship between the companies,
 10. past 3 days Direction Memory,
 11. lifecycle state.
 

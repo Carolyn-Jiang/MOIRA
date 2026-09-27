@@ -1,6 +1,7 @@
 import json
 import os
 import time
+from llm.prompt_time import PromptTime
 from typing import Any, Dict, Union
 
 import httpx
@@ -42,8 +43,8 @@ class OpenAIStructureGeneration(StructuredGenerationChatEndPoint):
         payload = {
             "model": self.chat_model,
             "messages": [
-                {"role": "system", "content": self.system_message},
-                {"role": "user", "content": prompt},
+                {"role": "system", "content": PromptTime().text(self.system_message)},
+                {"role": "user", "content": PromptTime().text(prompt)},
             ],
             "max_tokens": self.max_tokens,
             "response_format": {

@@ -7,7 +7,11 @@ warnings.filterwarnings("ignore")
 
 import os
 import sys
+from pathlib import Path
 from typing import Dict
+
+# Make the shared prompt boundary available when launching this file directly.
+sys.path.insert(0, str(Path(__file__).resolve().parents[2]))
 
 import orjson
 import typer

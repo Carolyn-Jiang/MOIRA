@@ -1,4 +1,5 @@
 import json
+from llm.prompt_time import PromptTime
 from typing import Any, Dict, Union
 
 import httpx
@@ -57,6 +58,7 @@ class VLLMStructureGeneration(StructuredGenerationChatEndPoint):
     def __call__(
         self, prompt: str, schema: Any
     ) -> Union[StructureGenerationFailure, StructureOutputResponse]:
+        prompt = PromptTime().text(prompt)
         if self.chat_model_type == "completion":
             request_data = {
                 **{
@@ -73,7 +75,7 @@ class VLLMStructureGeneration(StructuredGenerationChatEndPoint):
                     "model": self.chat_model,
                     "max_tokens": self.chat_max_new_token,
                     "messages": [
-                        {"content": self.chat_system_message, "role": "system"},
+                        {"content": PromptTime().text(self.chat_system_message), "role": "system"},
                         {"content": prompt, "role": "user"},
                     ],
                     "guided_json": json.dumps(schema),

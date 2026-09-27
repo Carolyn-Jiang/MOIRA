@@ -27,7 +27,7 @@ from utils.engine import write_counterfactual_logs, write_discovery_logs
 from utils.herculean import HERCULEAN_SYMBOLS, load_herculean_dataset
 
 PROJECT_ROOT = Path(__file__).resolve().parents[1]
-DEFAULT_SEEDS = (1103, 2207, 3301, 4409, 5501)
+DEFAULT_SEEDS = (1103, 2207, 3301)
 TRAIN_SESSIONS = 28  # A1/A2 retain their pre-specified windows; main A3/A4 use 27.
 CROSS_REGIME_START = "2025-06-02"
 CROSS_REGIME_SESSIONS = 103
@@ -233,7 +233,7 @@ def main(argv=None):
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument("--settings", nargs="+", choices=SETTINGS, default=list(SETTINGS))
     parser.add_argument("--ablations", nargs="+", choices=ABLATIONS, default=list(ABLATIONS))
-    parser.add_argument("--seeds", nargs="+", type=int, default=[1103])
+    parser.add_argument("--seeds", nargs="+", type=int, default=list(DEFAULT_SEEDS))
     parser.add_argument("--max-cycles", type=int, default=8)
     parser.add_argument("--attempts", type=int, default=3)
     parser.add_argument("--retry-delay", type=float, default=120)

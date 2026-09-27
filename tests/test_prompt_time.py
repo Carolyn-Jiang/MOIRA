@@ -44,12 +44,13 @@ class TestPromptTime(unittest.TestCase):
         self.assertEqual(masked, [{"step": "step XXX", "value": 100},
                                   {"step": "step XXX", "value": 110}])
 
-    def test_company_context_keeps_revenue_values_but_not_fiscal_dates(self):
+    def test_company_context_excludes_unversioned_financial_results(self):
         original = copy.deepcopy(COMPANY_PROFILES)
         text = profiles_block(list(COMPANY_PROFILES))
         self.assertNotRegex(text, r"202[45]|FY202")
-        self.assertIn("~$60.9B (reported fiscal period 1)", text)
-        self.assertIn("~$130.5B (reported fiscal period 2)", text)
+        self.assertNotIn("$", text)
+        self.assertNotIn("revenue", text.lower())
+        self.assertIn("GPUs and AI accelerators", text)
         self.assertEqual(COMPANY_PROFILES, original)
 
     def test_step_specific_lessons_are_not_transferable(self):
@@ -92,6 +93,36 @@ class TestPromptTime(unittest.TestCase):
                 llm.set_prompt_calendar(DAYS)
                 llm.set_prompt_step(DAYS[0])
                 self.assertEqual(llm.prompt_time.current_step, "step 001")
+
+    def test_future_changes_cannot_change_earlier_model_requests(self):
+        from test_redesign import Test42LifecycleSimplified
+        from llm.policy_agent import PolicyAgent
+        from utils.engine import simulate_discovery_window
+        f = Test42LifecycleSimplified()
+        dates, env = f._env(["A", "B"], 5)
+        def capture(data):
+            llm = PairTradingLLM(model="fixture")
+            llm._client = Mock()
+            requests = []
+            def reply(**request):
+                requests.append(copy.deepcopy(request["messages"]))
+                body = json.loads(request["messages"][1]["content"])
+                if "top5_candidates" in body:
+                    return response('{"selected_pair":["A","B"],"pair_selection_reason":"fixture"}')
+                return response('{"action":"FLAT","direction_reason":"fixture"}')
+            llm._client.chat.completions.create.side_effect = reply
+            agent = PolicyAgent(backend="open_source", llm=llm, symbols=["A", "B"])
+            simulate_discovery_window(dates=dates, env_data=data, symbols=["A","B"],
+                agent=agent, discovery_provider=f._const_provider(), lifecycle=False,
+                anti_flat_override=False)
+            return [m for m in requests if json.loads(m[1]["content"])["current_step"] < "step 004"]
+        before = capture(env)
+        changed = copy.deepcopy(env)
+        for d in dates[3:]:
+            changed[d]["price"]["A"] = 9999.
+            changed[d]["news"] = {"A": ["future-only dividend and acquisition sentinel"]}
+        self.assertEqual(before, capture(changed))
+        self.assertNotIn("future-only", json.dumps(before))
 
     def test_legacy_transport_entrypoint_also_masks_price_history(self):
         llm = PairTradingLLM(model="test")

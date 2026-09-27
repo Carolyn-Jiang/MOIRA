@@ -9,7 +9,9 @@ MOIRA combines statistical pair screening, language-model decisions, compact pol
 3. **Daily decisions:** select Long–Short, Short–Long or Flat, with feedback from settled counterfactual outcomes.
 4. **Pair maintenance:** evaluate accumulated break evidence at 23-session validation boundaries. A daily break alone does not replace a pair.
 
-The main experiment has 27 training sessions and 75 test decisions. The following price-only session settles the final decision without an additional news observation or model call. No-Beta and Beta change exposure; policy training uses No-Beta. A1/A2 retain their pre-specified 28-session training windows. A3 disables post-warmup policy consolidation; A4 disables pair replacement while retaining daily decisions and monitoring.
+Each setting uses three independent runs; tables and plots use the run with median cumulative return.
+
+The main experiment has 27 training sessions and 75 test decisions. The following price-only session settles the final decision without an additional news observation or model call. No-Beta and Beta change exposure; policy training uses No-Beta. A1 trains on 2 December 2024–13 January 2025 (28 sessions) and tests on 14 January 2025–31 March 2026 (304 sessions). A2 trains on 2 June–11 July 2025 (28 sessions) and tests on 14 July–27 October 2025 (75 sessions). A3/A4 use the same 2 January–11 February 2025 training and 12 February–30 May 2025 test windows as the main experiment. A3 disables post-warmup policy consolidation; A4 disables pair replacement while retaining daily decisions and monitoring.
 
 **Figure 2. Overall workflow**
 
@@ -38,7 +40,7 @@ The main experiment has 27 training sessions and 75 test decisions. The followin
 
 ## Results reported in the paper
 
-CR and MDD are percentages; Sharpe is unitless. These are the paper’s selected results, not averages over seeds. All reported results and figures follow the Overleaf manuscript.
+CR and MDD are percentages; Sharpe is unitless. All reported results and figures follow the Overleaf manuscript.
 
 | Model / baseline | No-Beta CR | Sharpe | MDD | Beta CR | Sharpe | MDD |
 |---|---:|---:|---:|---:|---:|---:|
@@ -87,7 +89,7 @@ CR and MDD are percentages; Sharpe is unitless. These are the paper’s selected
 
 Run the commands below in **Bash from the repository root**. Python 3.11 is required for these environment examples. A model name selects its provider automatically; one invocation can accept one or several model names.
 
-MOIRA prompts use `step 001`, `step 002`, etc. instead of calendar dates, restarting at each training replay or test window. Model-facing histories use the same numbering; dates outside that window or without a matching trading step are masked as `step XXX`. This applies to open-weight, hosted and A1–A4 calls. Price/news alignment and saved experiment dates retain the real calendar; no extra command or configuration is needed.
+MOIRA prompts use `step 001`, `step 002`, etc. instead of calendar dates, restarting at each training replay or test window. Model-facing histories use the same numbering; dates outside that window or without a matching trading step are masked as `step XXX`. This applies to open-weight, hosted and A1–A4 calls; FinMem also masks dates and excludes next-step outcomes during testing. Company context contains business descriptions only, without undated annual revenue figures. Price/news alignment and saved experiment dates retain the real calendar; no extra command or configuration is needed.
 
 ### Client setup
 
@@ -127,14 +129,14 @@ The launcher pins both weights and tokenizer to an exact revision, saves it in t
 
 ### Llama and Qwen: check and run
 
-In the client terminal, set `MODEL` to the same ID as the running server. The following block runs five seeds under **both Beta and No-Beta**. For a single seed, replace the `SEEDS` line with `SEEDS=(1103)`. Use `--sizing beta` or `--sizing nobeta` instead of `--sizing both` to run only one exposure.
+In the client terminal, set `MODEL` to the same ID as the running server. The following block runs the shared protocol under **both Beta and No-Beta**. For a single seed, replace the `SEEDS` line with `SEEDS=(1103)`. Use `--sizing beta` or `--sizing nobeta` instead of `--sizing both` to run only one exposure.
 
 ```bash
 set -euo pipefail
 source .venv/bin/activate
 MODEL='Qwen/Qwen3-4B'
 BASE_URL='http://127.0.0.1:8000/v1'
-SEEDS=(1103 2207 3301 4409 5501)
+SEEDS=(1103 2207 3301)
 BATCH="runs/${MODEL//\//-}"
 
 # The returned model list must contain MODEL before continuing.
@@ -170,12 +172,12 @@ For an existing compatible inference service, skip server installation and set `
 
 ### Hosted models: one or multiple names
 
-After setting the required keys in `.env`, run the block below. It checks every requested model before its batch. These examples explicitly use **one seed** and both exposures; change `SEEDS` to `(1103 2207 3301 4409 5501)` for five seeds. Run only the provider groups whose keys you configured.
+After setting the required keys in `.env`, run the block below. It checks every requested model before its batch. These examples run both exposures. Run only the provider groups whose keys you configured.
 
 ```bash
 set -euo pipefail
 source .venv/bin/activate
-SEEDS=(1103)
+SEEDS=(1103 2207 3301)
 
 run_hosted_batch() {
     local batch="$1"
@@ -203,7 +205,7 @@ Model IDs must be available at the configured endpoint; the runner does not subs
 
 ### A1–A4 model calls
 
-The ablation runner uses GPT-4.1-mini/Beta and GPT-5.4-mini/No-Beta, so configure `OPENAI_API_KEY` first. This block runs both settings with one seed:
+The ablation runner uses GPT-4.1-mini/Beta and GPT-5.4-mini/No-Beta, so configure `OPENAI_API_KEY` first. This block runs both settings:
 
 ```bash
 set -euo pipefail
@@ -212,9 +214,30 @@ python -m experiments.run_ablations \
     --settings gpt41_beta gpt54_nobeta --check-only
 python -m experiments.run_ablations \
     --settings gpt41_beta gpt54_nobeta \
-    --ablations a1 a2 a3 a4 --seeds 1103 \
+    --ablations a1 a2 a3 a4 --seeds 1103 2207 3301 \
     --attempts 3 --retry-delay 120 --output-dir runs/ablations
 ```
+
+### FinMem
+
+Set `OPENAI_API_KEY` in the root `.env` for GPT-4.1-mini and its embedding endpoint. Run independent study directories with the shared inputs:
+
+```bash
+set -euo pipefail
+source .venv/bin/activate
+python -m pip install -r baselines/finmem_fixed_pair/requirements.txt
+for study in main a1 a2; do
+    for seed in 1103 2207 3301; do
+        output="runs/finmem-${study}-${seed}"
+        python -m experiments.prepare_finmem --study "$study" --seed "$seed" --output-dir "$output"
+        python baselines/finmem_fixed_pair/run.py warmup --config-path "$output/config.json"
+        python baselines/finmem_fixed_pair/run.py test --config-path "$output/config.json"
+        python baselines/finmem_fixed_pair/run.py eval --config-path "$output/config.json"
+    done
+done
+```
+
+For an interrupted phase, replace `warmup` or `test` with `warmup-checkpoint` or `test-checkpoint` using the same configuration. Outputs and checkpoints remain local. The adapter retains the [FinMem MIT license](baselines/finmem_fixed_pair/LICENSE).
 
 ### Completion and recovery
 

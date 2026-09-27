@@ -24,7 +24,7 @@ from experiments.recovery import (batch_lock, input_signature, digest, completed
 from utils.data_utils import PAIR_HISTORY_YEARS
 
 ROOT = Path(__file__).resolve().parents[1]
-DEFAULT_SEEDS = (1103, 2207, 3301, 4409, 5501)
+DEFAULT_SEEDS = (1103, 2207, 3301)
 
 
 def parse_args(argv=None):

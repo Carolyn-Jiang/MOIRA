@@ -47,9 +47,9 @@ class TestBatchCLI(unittest.TestCase):
             self.assertFalse(out.exists())
             build.assert_not_called()
 
-    def test_two_models_schedule_ten_processes_and_preserve_failures(self):
+    def test_two_models_schedule_three_seeds_each_and_preserve_failures(self):
         from experiments.main_artifacts import run_directory
-        codes = iter([0, 1] + [0]*8)
+        codes = iter([0, 1] + [0]*4)
         def fake_worker(command, env, console):
             code = next(codes)
             if code == 0:
@@ -72,11 +72,11 @@ class TestBatchCLI(unittest.TestCase):
             out = Path(tmp) / "batch"
             with self.assertRaises(RuntimeError):
                 main(["llama-test", "qwen-test", "--output-dir", str(out)])
-            self.assertEqual(runner.call_count, 10)
+            self.assertEqual(runner.call_count, 6)
             manifest = json.loads((out / "batch.json").read_text())
             self.assertEqual(manifest["status"], "failed")
             self.assertEqual(manifest["pair_history_years"], 10)
-            self.assertEqual(len(manifest["runs"]), 10)
+            self.assertEqual(len(manifest["runs"]), 6)
             self.assertFalse((out / "summary").exists())
             self.assertTrue((out / "inputs/pool.csv").is_file())
             for call in runner.call_args_list:
@@ -127,7 +127,7 @@ class TestBatchCLI(unittest.TestCase):
             out = Path(tmp) / "batch"
             main(["Qwen/Qwen3-32B", "--thinking", "off", "--output-dir", str(out)])
             self.assertEqual(build.call_args.kwargs["thinking_mode"], "off")
-            self.assertEqual(runner.call_count, 5)
+            self.assertEqual(runner.call_count, 3)
             self.assertTrue(all(c.args[1]["OPEN_SOURCE_THINKING"] == "off" for c in runner.call_args_list))
             self.assertEqual(json.loads((out / "batch.json").read_text())["thinking_mode_requested"], "off")
 
@@ -206,13 +206,13 @@ class TestRanking(unittest.TestCase):
             write_json(batch / "batch.json", {"models": [{"provider": "offline", "model": "offline-deterministic"}],
                 "seeds": list(DEFAULT_SEEDS), "sizing": ["nobeta", "beta"], "runs": runs})
             result = summarize_batch(batch)
-            self.assertEqual(len(pd.read_csv(result / "all_seeds.csv")), 10)
+            self.assertEqual(len(pd.read_csv(result / "all_seeds.csv")), 6)
             selected = pd.read_csv(result / "selected_seeds.csv")
             self.assertEqual(set(selected.selection), {"median", "max"})
-            self.assertEqual(set(selected[selected.selection == "median"].seed), {3301})
+            self.assertEqual(set(selected[selected.selection == "median"].seed), {2207})
             self.assertEqual(set(selected[selected.selection == "max"].seed), {1103})
             summary = pd.read_csv(result / "comparison.csv")
-            self.assertTrue((summary.n_seeds == 5).all())
+            self.assertTrue((summary.n_seeds == 3).all())
             for kind in ("median", "max"):
                 for mode in ("nobeta", "beta"):
                     folder = result / kind / mode

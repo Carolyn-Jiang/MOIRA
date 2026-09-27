@@ -137,7 +137,7 @@ class TestBatchRecovery(unittest.TestCase):
             first = run_directory(batch / "runs", "qwen", "Qwen/Qwen3-4B", 1103)
             preserved = (first / "manifest.json").read_bytes()
             self.assertEqual(main(self.args(batch)), 0)
-            self.assertEqual(calls, {1103: 2, 2207: 2, 3301: 1, 4409: 1, 5501: 1})
+            self.assertEqual(calls, {1103: 2, 2207: 2, 3301: 1})
             self.assertEqual((first / "manifest.json").read_bytes(), preserved)
             self.assertEqual((batch / "inputs/pool.csv").read_bytes(), snapshot)
             loader.assert_called_once()
@@ -148,7 +148,7 @@ class TestBatchRecovery(unittest.TestCase):
             main(self.args(batch))
             self.assertEqual(calls, before)
             self.assertEqual(fake.validate_server.call_count, checks)
-            self.assertEqual(len(json.loads((batch / "batch.json").read_text())["runs"]), 5)
+            self.assertEqual(len(json.loads((batch / "batch.json").read_text())["runs"]), 3)
             (batch / "inputs/pool.csv").write_text("tampered")
             with self.assertRaisesRegex(ValueError, "snapshot changed"):
                 main(self.args(batch))

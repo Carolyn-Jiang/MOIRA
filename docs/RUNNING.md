@@ -77,7 +77,7 @@ The bundled input panel contains only the `prices` and `news` fields consumed by
 
 A1/A2 download the public [TheFinAI/Herculean](https://huggingface.co/datasets/TheFinAI/Herculean) price/news parquet inputs (CC BY 4.0). They may also need yfinance to extend the price cache to the required ten-year start. Each batch then freezes and hashes its inputs; a resumed batch reuses that snapshot and rejects altered inputs. Inference requires access to the configured local or hosted server.
 
-The main runner defaults to five seeds (`1103 2207 3301 4409 5501`); `--seeds 1103` runs only one. `--sizing beta` or `--sizing nobeta` runs one exposure. `--dry-run` prints a plan without inference. `--check-only` sends one short probe per model, without training. Successful runs print `CHECK_OK`, `SEED_RESULT`, `BATCH_OK` or `CELL_OK` and write local metrics and plots under `runs/`.
+The main runner defaults to three seeds (`1103 2207 3301`); `--seeds 1103` runs only one. `--sizing beta` or `--sizing nobeta` runs one exposure. `--dry-run` prints a plan without inference. `--check-only` sends one short probe per model, without training. Successful runs print `CHECK_OK`, `SEED_RESULT`, `BATCH_OK` or `CELL_OK` and write local metrics and plots under `runs/`.
 
 Rerun the same command to resume. Completed seeds/cells are skipped. Transient connection, rate-limit and server failures retry up to three times with 120-second waits; failed attempts are preserved locally. Authentication and response-contract failures stop immediately. Main recovery is at seed boundaries; ablations also reuse completed training and full-control checkpoints. Partly completed trajectories restart. New local main results include comparison tables and median/max representative trajectories. They do not replace `paper/` assets.
 
@@ -119,4 +119,4 @@ A completed main cell prints `BASELINE_OK ... test_steps=75`; its trajectory con
 
 ## FinMem
 
-See [the fixed-pair runner](../baselines/finmem_fixed_pair/README.md) for installation, preparation, warmup, testing, checkpoint recovery and evaluation. It uses GPT-4.1-mini and an embedding endpoint; unlike the two numeric baselines, a full run makes paid API calls. All checkpoints, generated data and logs stay local.
+See the [main README](../README.md#finmem) for the fixed-pair runner commands. It uses GPT-4.1-mini and an embedding endpoint; unlike the two numeric baselines, a full run makes paid API calls. All checkpoints, generated data and logs stay local.

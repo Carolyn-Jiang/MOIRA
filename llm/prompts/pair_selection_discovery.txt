@@ -24,7 +24,7 @@ When selecting a pair, consider:
 - business relationship between the two companies,
 - whether their revenue models or business exposures make the pair economically meaningful.
 
-Company context is provided for each stock, including main business and historical revenue summary.
+Company context is provided for each stock, limited to its main business; undated financial results are excluded.
 
 Choose ONE pair only.
 

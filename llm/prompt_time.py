@@ -10,7 +10,10 @@ TIME_INSTRUCTION = (
     "Calendar dates are masked as step labels. current_step identifies the current "
     "trading step within this training or test window, starting at step 001. "
     "Historical records use the same numbering. step XXX masks a date outside "
-    "the decision window or without a mapped trading step. Do not infer calendar dates."
+    "the decision window or without a mapped trading step. Do not infer calendar dates. "
+    "Use only the supplied observations and settled past-step feedback. Do not "
+    "reconstruct historical market outcomes from model pretraining or treat "
+    "predicted future outcomes as observed facts."
 )
 
 _MONTH = (r"(?:Jan(?:uary)?|Feb(?:ruary)?|Mar(?:ch)?|Apr(?:il)?|May|Jun(?:e)?|"

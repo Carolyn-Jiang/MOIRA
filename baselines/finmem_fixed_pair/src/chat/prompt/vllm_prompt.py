@@ -1,5 +1,6 @@
 from datetime import date
 from typing import List, Union
+from llm.prompt_time import PromptTime, TIME_INSTRUCTION
 
 from ...utils import RunMode
 from .base import BasePromptConstructor
@@ -13,12 +14,12 @@ reflection_memory_id_desc = "The id of the reflection-term information."
 # Prefix. The fixed pair is represented by one synthetic price index so the
 # original FinMem memory and portfolio implementation remain unchanged.
 warmup_investment_info_prefix = (
-    "The current date is {cur_date}. The fixed trading target is {symbol}. "
+    "The current trading step is {cur_step}. The fixed trading target is {symbol}. "
     "For warm-up reflection only, (current pair index - next-session pair index) "
     "/ current pair index is {future_record}.\n\n"
 )
 test_investment_info_prefix = (
-    "The fixed pair-trading target is {symbol}; the current date is {cur_date}. "
+    "The fixed pair-trading target is {symbol}; the current trading step is {cur_step}. "
     "The pair must remain fixed throughout the experiment: do not select, replace, "
     "or trade any other pair.\n\n"
 )
@@ -69,8 +70,11 @@ def _add_momentum_info(momentum: int, investment_info: str) -> str:
 
 
 class VLLMPromptConstructor(BasePromptConstructor):
-    @staticmethod
+    def __init__(self):
+        self.prompt_time = PromptTime()
+
     def __call__(
+        self,
         cur_date: date,
         symbol: str,
         run_mode: RunMode,
@@ -84,23 +88,26 @@ class VLLMPromptConstructor(BasePromptConstructor):
         reflection_memory: Union[List[str], None],
         reflection_memory_id: Union[List[int], None],
         momentum: Union[int, None] = None,
+        cur_step: Union[int, None] = None,
     ) -> str:
         display_symbol = symbol.replace("__", "/")
+        step_label = f"step {cur_step:03d}" if cur_step is not None else "step XXX"
+        self.prompt_time.labels[cur_date] = step_label
         # investment info + memories
         if run_mode == RunMode.WARMUP:
             investment_info = warmup_investment_info_prefix.format(
-                symbol=display_symbol, cur_date=cur_date, future_record=future_record
+                symbol=display_symbol, cur_step=step_label, future_record=future_record
             )
         else:
             investment_info = test_investment_info_prefix.format(
-                symbol=display_symbol, cur_date=cur_date
+                symbol=display_symbol, cur_step=step_label
             )
         if short_memory and short_memory_id:
             investment_info += "The short-term information:\n"
             investment_info += "\n".join(
                 [f"{i[0]}. {i[1].strip()}" for i in zip(short_memory_id, short_memory)]
             )
-            investment_info += sentiment_explanation
+            investment_info += "\n" + sentiment_explanation
             investment_info += "\n\n"
         if mid_memory and mid_memory_id:
             investment_info += "The mid-term information:\n"
@@ -126,7 +133,7 @@ class VLLMPromptConstructor(BasePromptConstructor):
             investment_info += momentum_explanation
             investment_info = _add_momentum_info(momentum, investment_info)
 
-        if run_mode == RunMode.WARMUP:
-            return investment_info + warmup_final_prompt
-        else:
-            return investment_info + test_final_prompt
+        suffix = warmup_final_prompt if run_mode == RunMode.WARMUP else test_final_prompt
+        grounding = ("Use the supplied warmup outcome only for training reflection."
+                     if run_mode == RunMode.WARMUP else TIME_INSTRUCTION)
+        return self.prompt_time.text(investment_info + "\n" + suffix + "\n" + grounding)

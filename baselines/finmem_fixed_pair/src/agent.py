@@ -360,9 +360,11 @@ class FinMemAgent:
         cur_queried_memories = queried_memories[cur_symbol]
         cur_prompt = self.chat_prompt(
             cur_date=market_info.cur_date,  # type: ignore
+            cur_step=market_info.cur_step,
             symbol=cur_symbol,
             run_mode=run_mode,
-            future_record=market_info.cur_future_price_diff[cur_symbol],  # type: ignore
+            future_record=(market_info.cur_future_price_diff[cur_symbol]
+                           if run_mode == RunMode.WARMUP else None),
             short_memory=cur_queried_memories["short_memory"],  # type: ignore
             short_memory_id=cur_queried_memories["short_memory_id"],  # type: ignore
             mid_memory=cur_queried_memories["mid_memory"],  # type: ignore
@@ -460,6 +462,9 @@ class FinMemAgent:
     def step(
         self, market_info: OneDayMarketInfo, run_mode: RunMode, task_type: TaskType
     ) -> None:
+        if run_mode == RunMode.TEST:
+            # Future prices belong to the evaluator, never the test-time agent.
+            market_info = market_info.model_copy(update={"cur_future_price_diff": None})
         logger.info(
             f"AGENT-Step, date: {market_info.cur_date}, run mode: {run_mode}, task type: {task_type}"
         )

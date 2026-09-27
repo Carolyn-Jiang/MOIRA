@@ -441,7 +441,7 @@ def run_redesign_experiment(*, seed=None, output_root=None, sizing=None) -> Path
         raise
     manifest["status"] = "completed"
     write_json(root / "manifest.json", manifest)
-    print(f"Saved seed={seed}: {root}\nBatch runner generates median/max figures after all five seeds complete.")
+    print(f"Saved seed={seed}: {root}\nBatch runner generates median/max figures after all requested seeds complete.")
     return root
 
 
