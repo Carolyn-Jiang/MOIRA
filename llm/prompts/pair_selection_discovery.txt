@@ -1,0 +1,36 @@
+PAIR SELECTION TASK
+
+You are selecting a pair for a statistical pair-trading strategy.
+
+Pair trading seeks two assets whose prices have a stable long-run relationship. A good pair should have:
+
+1. strong historical cointegration,
+2. a reasonable mean-reversion speed,
+3. interpretable economic or business relationship,
+4. sufficient spread movement to trade,
+5. no obvious structural breakdown.
+
+The candidate pairs below were generated from a causal 10-year statistical screen. Your task is not to compute cointegration. Your task is to choose the most attractive pair from the candidate pool.
+
+When selecting a pair, consider:
+
+- cointegration p-value,
+- half-life,
+- beta / hedge ratio,
+- long-horizon z-score,
+- trading-window z-score,
+- current lifecycle state,
+- pair memory success/failure history,
+- business relationship between the two companies,
+- whether their revenue models or business exposures make the pair economically meaningful.
+
+Company context is provided for each stock, including main business and 2024 revenue summary.
+
+Choose ONE pair only.
+
+Return JSON:
+
+{
+  "selected_pair": "AAA/BBB",
+  "pair_selection_reason": "..."
+}

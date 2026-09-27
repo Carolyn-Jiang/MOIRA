@@ -1,0 +1,230 @@
+[
+  {
+    "figure": 1,
+    "file": "figure_01_concept_task.png",
+    "preview": "figure_01_concept_task.png",
+    "sha256": "28f26f59e2c2191115b76376a7ad9264828a7850639b9f56a1433d61250b9cdf"
+  },
+  {
+    "figure": 2,
+    "file": "figure_02_overall_workflow_readable.png",
+    "preview": "figure_02_overall_workflow_readable.png",
+    "sha256": "dc46249606fec69f31aec97f6f499321770e539d55d32c9c6835c98ffda59226"
+  },
+  {
+    "figure": 3,
+    "file": "figure_03_cumulative_return_comparison_gemini_seed43.png",
+    "preview": "figure_03_cumulative_return_comparison_gemini_seed43.png",
+    "sha256": "610ae4231b7c6c0fd8ead26da8bdc2240e58c2b802af7d91f8f2247fc53a9daa"
+  },
+  {
+    "figure": 4,
+    "file": "figure_04_ablation_a1_trajectory.png",
+    "preview": "figure_04_ablation_a1_trajectory.png",
+    "sha256": "a570d8da22203779728a42332a9bd596a74e63bdbb18936b9f4360d900712d39"
+  },
+  {
+    "figure": 5,
+    "file": "figure_05_ablation_a2_trajectory.png",
+    "preview": "figure_05_ablation_a2_trajectory.png",
+    "sha256": "0060bfedd13aa239d75c88ba000e7b955dfa96c8a4718cdd7a5b78f6fa91edef"
+  },
+  {
+    "figure": 6,
+    "file": "figure_06_ablation_a3.png",
+    "preview": "figure_06_ablation_a3.png",
+    "sha256": "99e318cb4b071029e3abd2f89651120e4dd7afa07b7ad3215cdcfa988a253482"
+  },
+  {
+    "figure": 7,
+    "file": "figure_07_ablation_a4.png",
+    "preview": "figure_07_ablation_a4.png",
+    "sha256": "6877c4b5af57e3f4197506cf85fb2b2bc6f89c3ac734cd58c55f32f4fee958c0"
+  },
+  {
+    "figure": 8,
+    "file": "figure_08_belief_update_readable.png",
+    "preview": "figure_08_belief_update_readable.png",
+    "sha256": "c055eb673474dfd0ff1870529bded1320a0a9ae93bdb4d62d8b80778e7cb0c20"
+  },
+  {
+    "figure": 9,
+    "file": "figure_09_pair_select_readable.png",
+    "preview": "figure_09_pair_select_readable.png",
+    "sha256": "9356b7e5357660949691baa5ab412bb09ed2e15eb26dc8ea7335b03a5edb9f48"
+  },
+  {
+    "figure": 10,
+    "file": "figure_10_lifecycle_readable.png",
+    "preview": "figure_10_lifecycle_readable.png",
+    "sha256": "ea8dab53437bd89fec713d0044da02738606a9abad89da92e9b3a67b848324dc"
+  },
+  {
+    "figure": 11,
+    "file": "figure_11_final_return_comparison.pdf",
+    "preview": "figure_11_final_return_comparison.png",
+    "sha256": "991e9fba54b8855c89e4d164f6d1bb167c2aba2404139710a6ce722d52f526f9"
+  },
+  {
+    "figure": 12,
+    "file": "figure_12_sharpe_comparison.pdf",
+    "preview": "figure_12_sharpe_comparison.png",
+    "sha256": "f8757351ffad0b8435ee46a0709c707a08d5c9e16f44a5734b86fc56550ee9dc"
+  },
+  {
+    "figure": 13,
+    "file": "figure_13_drawdown_curves_no_beta.pdf",
+    "preview": "figure_13_drawdown_curves_no_beta.png",
+    "sha256": "f04ead195427472a2ed3ba922a6a452ffbea6ceb349290e01dfafcd29cac7efe"
+  },
+  {
+    "figure": 14,
+    "file": "figure_14_drawdown_curves_beta.pdf",
+    "preview": "figure_14_drawdown_curves_beta.png",
+    "sha256": "92621504c1880c220b98906e76390514738dd7d4b5a1f5ede2625cd6fca97443"
+  },
+  {
+    "figure": 15,
+    "file": "figure_15_beta_effect_return.pdf",
+    "preview": "figure_15_beta_effect_return.png",
+    "sha256": "5d231dc8e928620af366c507f1964cfcdc63aded84b7a04f86e7d3e8b243f9d4"
+  },
+  {
+    "figure": 16,
+    "file": "figure_16_beta_effect_sharpe.pdf",
+    "preview": "figure_16_beta_effect_sharpe.png",
+    "sha256": "fc935ce506f94773315f8f11be7114dbe644e554ce5cab3fea95a1e6e3beccf4"
+  },
+  {
+    "figure": 17,
+    "file": "figure_17_pair_selection_heatmap.pdf",
+    "preview": "figure_17_pair_selection_heatmap.png",
+    "sha256": "7db5d108de119fc6defd26d886385e6370eafa529fc8a6febc56ac01e8649659"
+  },
+  {
+    "figure": 18,
+    "file": "figure_18_pair_selection_heatmap_no_beta.pdf",
+    "preview": "figure_18_pair_selection_heatmap_no_beta.png",
+    "sha256": "1e91ed7bca3195c1b4c2a7fb501e19f967762d4d2ac4ed37f63d9b6bff7829b0"
+  },
+  {
+    "figure": 19,
+    "file": "figure_19_action_distribution_no_beta.pdf",
+    "preview": "figure_19_action_distribution_no_beta.png",
+    "sha256": "30ca96d2efd1135ab714ed659df06802671b759f032c26185d70dd039711d34e"
+  },
+  {
+    "figure": 20,
+    "file": "figure_20_action_distribution_beta.pdf",
+    "preview": "figure_20_action_distribution_beta.png",
+    "sha256": "0b3c3305b7b492fc7b08c791aa3bc37d9d4fa3bc8e1a48cbfc7ed619f588f777"
+  },
+  {
+    "figure": 21,
+    "file": "figure_21_pair_switch_comparison.pdf",
+    "preview": "figure_21_pair_switch_comparison.png",
+    "sha256": "244b43b8e3f8c7c32f2335d04a97bbbde36dc0866bb0ed79381a1bc13c5ac7f7"
+  },
+  {
+    "figure": 22,
+    "file": "figure_22_pair_switch_comparison_no_beta.pdf",
+    "preview": "figure_22_pair_switch_comparison_no_beta.png",
+    "sha256": "bbf0b14d7c25c93a2057ca16d6776e3b7693c2c4c23270d2e1b62a8b0e3ded73"
+  },
+  {
+    "figure": 23,
+    "file": "figure_23_training_dynamics.pdf",
+    "preview": "figure_23_training_dynamics.png",
+    "sha256": "86ade47ace64042d37d46632c7e2ced7164aa4046fee0dee870cedd917aecc0e"
+  },
+  {
+    "figure": 24,
+    "file": "figure_24_counterfactual_accuracy.pdf",
+    "preview": "figure_24_counterfactual_accuracy.png",
+    "sha256": "33052d94c8bc7c75900cf5fdda3dc09887d758287bf9a5c8e8412e2012774729"
+  },
+  {
+    "figure": 25,
+    "file": "figure_25_break_score_evolution.pdf",
+    "preview": "figure_25_break_score_evolution.png",
+    "sha256": "9acd439a3f1ab225aa8525e6bd23bf82a5a6556327b0c475a928cb59a4bdd960"
+  },
+  {
+    "figure": 26,
+    "file": "figure_26_metrics_all.pdf",
+    "preview": "figure_26_metrics_all.png",
+    "sha256": "15fca75ae4b0bdcbbf8ab7ff430ea45e4731f09858a46a7331327af4fc409728"
+  },
+  {
+    "figure": 27,
+    "file": "figure_27_cumulative_all.pdf",
+    "preview": "figure_27_cumulative_all.png",
+    "sha256": "d9d45ae8dcfe9fe750bb0256c0c1769dd6b69b33c0a738e4a987dc6e96455d54"
+  },
+  {
+    "figure": 28,
+    "file": "figure_28_drawdown_all.pdf",
+    "preview": "figure_28_drawdown_all.png",
+    "sha256": "5f5badeb0dfae051bcf99b551a2143da7fdbcd5edc810cb43090a1e498abe237"
+  },
+  {
+    "figure": 29,
+    "file": "figure_29_beta_effects_all.pdf",
+    "preview": "figure_29_beta_effects_all.png",
+    "sha256": "3b5b77f16ebdd8eb42b45ecc210755d4ab935ce30ae29b4d0c4e22181a6837b3"
+  },
+  {
+    "figure": 30,
+    "file": "figure_30_pair_heatmap_nobeta.pdf",
+    "preview": "figure_30_pair_heatmap_nobeta.png",
+    "sha256": "31001ab27408e9bbf008f0ed3876344d33cb9fe4778923d0815b539eab460262"
+  },
+  {
+    "figure": 31,
+    "file": "figure_31_pair_heatmap_beta.pdf",
+    "preview": "figure_31_pair_heatmap_beta.png",
+    "sha256": "cca8d71964e837511a89592b3b5832d4040430c0dd04e42111c3778acea7ffbb"
+  },
+  {
+    "figure": 32,
+    "file": "figure_32_actions_all.pdf",
+    "preview": "figure_32_actions_all.png",
+    "sha256": "e244bfd3d5519191d17fcf2719fb7990e37e6e36289557c6f0a8620288bb0111"
+  },
+  {
+    "figure": 33,
+    "file": "figure_33_pair_switch_all.pdf",
+    "preview": "figure_33_pair_switch_all.png",
+    "sha256": "5ef99b406906371ec2786a979dc0baefc4f2b26e66616dac1e890057232660a5"
+  },
+  {
+    "figure": 34,
+    "file": "figure_34_training_nobeta.pdf",
+    "preview": "figure_34_training_nobeta.png",
+    "sha256": "074bb44a78b5235a63e42247c1150b89f3890805cb4983ef71586991655956dd"
+  },
+  {
+    "figure": 35,
+    "file": "figure_35_training_beta.pdf",
+    "preview": "figure_35_training_beta.png",
+    "sha256": "61ffe9d626296e0e4d3b0a73d3cb54ea54eca6ffd414dd862f27ae1997e13d79"
+  },
+  {
+    "figure": 36,
+    "file": "figure_36_accuracy_all.pdf",
+    "preview": "figure_36_accuracy_all.png",
+    "sha256": "e25df689a2c78c7c797b3133e7a14a2bb137e2e2e80c9f9b5ac72b38f69d0c6e"
+  },
+  {
+    "figure": 37,
+    "file": "figure_37_break_scores_nobeta.pdf",
+    "preview": "figure_37_break_scores_nobeta.png",
+    "sha256": "479e72f88f6b35bc220a2862f16284d0d2c157c8bb8e00d99a5f5f3d275472a4"
+  },
+  {
+    "figure": 38,
+    "file": "figure_38_break_scores_beta.pdf",
+    "preview": "figure_38_break_scores_beta.png",
+    "sha256": "3275cfd9e9ed4d3444f7b433bf73fa19c325fde6994b9fede8ba96f38655448f"
+  }
+]

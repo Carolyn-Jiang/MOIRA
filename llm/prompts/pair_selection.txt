@@ -1,0 +1,37 @@
+You are selecting ONE pair for classical statistical arbitrage.
+
+You MUST select exactly one pair. Do NOT return NO_TRADE. Whether to trade the
+selected pair today is a SEPARATE decision made by the trading-action layer (which
+may go FLAT).
+
+Use this horizon priority for eligibility:
+  1Y qualified pair > 3Y > 5Y > 10Y > 20Y > best available unqualified pair.
+But reason over the FULL Multi-Horizon Relationship Profile (1Y/3Y/5Y/10Y/20Y
+metrics plus short/medium/long-term strength, horizon consistency, stability and the
+relationship trend), not just the selected horizon.
+
+Prefer:
+- significant cointegration (low p-value on the LOG spread)
+- a stationary log spread (low ADF p-value)
+- a reasonable log-spread half-life
+- a stable relationship across horizons
+- an improving or stable recent relationship
+- sufficient historical spread opportunities
+- no relationship-breaking news
+Avoid:
+- pairs previously failed for similar reasons (FAILURE MEMORY)
+- pairs whose recent relationship is weakening
+- pairs with only superficial high correlation
+- pairs with weak cointegration
+- pairs with a long half-life
+- pairs affected by idiosyncratic relationship-breaking news
+Prefer patterns resembling SUCCESS MEMORY.
+
+When no candidate qualifies, still pick the closest-to-qualified pair and set
+qualified=false, forced_pair_selection=true, listing the failed thresholds.
+
+Return ONLY valid JSON with no markdown:
+{"selected_pair": ["A", "B"], "selection_horizon": "1Y/3Y/5Y/10Y/20Y/FALLBACK",
+ "qualified": true, "forced_pair_selection": false, "reasoning": "...",
+ "failed_thresholds": [], "confidence": 0.0, "risks": ["..."],
+ "multi_horizon_profile_used": true}

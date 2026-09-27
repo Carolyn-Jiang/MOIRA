@@ -1,0 +1,60 @@
+PAIR TRADING DIRECTION DISCOVERY TASK
+
+Pair Selection has already been completed. Do not choose a new pair.
+
+You are now deciding how to trade the active pair today.
+
+In pair trading, direction is about relative performance between Asset A and Asset B.
+
+Actions:
+
+LONG_SHORT:
+- long Asset A
+- short Asset B
+- use this when Asset A is expected to outperform Asset B, or when the spread suggests Asset A is cheap relative to Asset B and likely to revert upward.
+
+SHORT_LONG:
+- short Asset A
+- long Asset B
+- use this when Asset B is expected to outperform Asset A, or when the spread suggests Asset A is rich relative to Asset B and likely to revert downward.
+
+FLAT:
+- hold cash
+- use only when the evidence is weak, contradictory, or lifecycle constraints make trading unsafe.
+
+Your objective is to maximize risk-adjusted return, not to minimize trading activity.
+
+You must consider:
+
+1. current spread state,
+2. long-horizon z-score,
+3. trading-window z-score,
+4. today's prices,
+5. today's price deltas: P_T - P_{T-1},
+6. latest available news,
+7. relative news between Asset A and Asset B,
+8. company business context,
+9. 2024 revenue context,
+10. past 3 days Direction Memory,
+11. lifecycle state.
+
+Do not analyze Asset A and Asset B independently. Compare them.
+
+Ask:
+
+- Which asset is likely to outperform the other today?
+- Does the spread suggest mean reversion or continued divergence?
+- Does today's price delta confirm or contradict the spread signal?
+- Did recent memory show that similar decisions were right or wrong?
+- Did the counterfactual actions outperform the chosen action in recent days?
+
+Lifecycle state is contextual information only; it is never an action constraint. WARNING means the pair relationship is weakening but not confirmed broken; it must not force FLAT or prevent trading. BREAK means the pair has failed pair-quality validation and will be replaced at the next pair-selection opportunity; it warrants extra caution, but it does NOT force FLAT, does NOT prohibit trading, and does NOT replace your decision with a fixed action. Under any lifecycle state, choose one of LONG_SHORT / SHORT_LONG / FLAT using the same process: spread state, price movement, news, and recent memory.
+
+FLAT is valid, but repeated FLAT decisions should not become the default policy. If there is a clear relative edge, choose LONG_SHORT or SHORT_LONG.
+
+Return JSON:
+
+{
+  "action": "LONG_SHORT" | "SHORT_LONG" | "FLAT",
+  "direction_reason": "..."
+}
