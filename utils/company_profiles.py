@@ -13,6 +13,7 @@ Each entry: ticker -> {name, business, revenue_2024 (text, with FY basis)}.
 """
 from __future__ import annotations
 
+import re
 from typing import Dict, Sequence
 
 COMPANY_PROFILES: Dict[str, Dict[str, str]] = {
@@ -54,10 +55,16 @@ def profile_text(ticker: str) -> str:
     p = COMPANY_PROFILES.get(str(ticker).upper())
     if not p:
         return f"{ticker}: (no company profile on file)"
-    return f"{ticker} — {p['name']}: {p['business']} 2024 revenue {p['revenue_2024']}."
+    # Keep source fiscal dates above for provenance, but omit them from model input.
+    periods = p["revenue_2024"].split("; ")
+    revenues = []
+    for i, period in enumerate(periods, 1):
+        label = f"reported fiscal period {i}" if len(periods) > 1 else "reported fiscal period"
+        revenues.append(re.sub(r"\(FY\d{4}[^)]*\)", f"({label})", period))
+    return f"{ticker} — {p['name']}: {p['business']} Historical revenue {'; '.join(revenues)}."
 
 
 def profiles_block(tickers: Sequence[str]) -> str:
     """A 'COMPANY CONTEXT' block for the given tickers, for prompt injection."""
     lines = [profile_text(t) for t in tickers]
-    return "COMPANY CONTEXT (business + 2024 revenue):\n" + "\n".join(f"- {l}" for l in lines)
+    return "COMPANY CONTEXT (business + historical revenue):\n" + "\n".join(f"- {l}" for l in lines)

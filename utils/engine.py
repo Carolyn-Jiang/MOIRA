@@ -184,6 +184,9 @@ def simulate_window(
     """
     from llm.policy_agent import PairReflectionMemory
     symbols = list(symbols)
+    prompt_llm = getattr(agent, "llm", None)
+    if callable(getattr(prompt_llm, "set_prompt_calendar", None)):
+        prompt_llm.set_prompt_calendar(dates)
     portfolio = PortfolioManager(symbols, initial_cash=1.0)
     price_history: Dict[date, Dict[str, Dict[str, float]]] = {}
     if history_seed:
@@ -306,6 +309,8 @@ def simulate_window(
         return cands, sums
 
     for i, d in enumerate(dates):
+        if callable(getattr(prompt_llm, "set_prompt_step", None)):
+            prompt_llm.set_prompt_step(d)
         prices = env_data[d]["price"]
         news = env_data[d].get("news", {})
         price_history[d] = {"price": prices}
@@ -938,6 +943,9 @@ def simulate_discovery_window(
         if any(not math.isfinite(float(final_prices.get(s, float("nan"))))
                or float(final_prices.get(s, 0)) <= 0 for s in symbols):
             raise ValueError("Missing valid terminal settlement prices")
+    prompt_llm = getattr(agent, "llm", None)
+    if callable(getattr(prompt_llm, "set_prompt_calendar", None)):
+        prompt_llm.set_prompt_calendar(dates)
     portfolio = PortfolioManager(symbols, initial_cash=1.0)
     price_history: Dict[date, Dict[str, Dict[str, float]]] = {}
     if history_seed:
@@ -1058,6 +1066,8 @@ def simulate_discovery_window(
                         half_life=(pc.half_life if pc is not None else None))
 
     for i, d in enumerate(dates):
+        if callable(getattr(prompt_llm, "set_prompt_step", None)):
+            prompt_llm.set_prompt_step(d)
         prices = env_data[d]["price"]
         price_history[d] = {"price": prices}
         dstr = d.isoformat()

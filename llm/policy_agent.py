@@ -99,7 +99,7 @@ def sanitize_reflection(text: str, symbols: Optional[Sequence[str]] = None) -> b
     """
     t = str(text or "")
     up = t.upper()
-    if _DATE_RE.search(t):
+    if _DATE_RE.search(t) or re.search(r"\bstep\s+(?:\d+|XXX)\b", t, re.IGNORECASE):
         return False
     if _PAIR_RE.search(up):
         return False
@@ -1249,7 +1249,7 @@ class PolicyAgent:
 
         ``candidates`` is the ranked Top-5 (rank 1 = strongest 10Y cointegration). The LLM
         (openai) sees per-candidate spread-state + relative news + COMPANY CONTEXT (business
-        + 2024 revenue) + Pair Selection memory, and returns ``{selected_pair,
+        + historical revenue) + Pair Selection memory, and returns ``{selected_pair,
         pair_selection_reason}``. The chosen pair's daily ACTION is decided separately by
         ``discover_daily_direction`` (Direction-Discovery prompt). The offline backend uses
         a deterministic rule. The returned ``action`` is a placeholder (FLAT) -- the engine
@@ -1948,7 +1948,7 @@ class PolicyAgent:
             "You are a trading coach. From the round's DAILY decisions with COUNTERFACTUAL PnL "
             "(what LONG_SHORT/SHORT_LONG/FLAT would each have earned) write a SHORT reflection "
             "(<=6 lines) and 1-3 TRANSFERABLE decision PRINCIPLES that improve future direction "
-            "decisions. NEVER mention a specific ticker, pair, date, or a specific "
+            "decisions. NEVER mention a specific ticker, pair, date, step, or a specific "
             "LONG_SHORT/SHORT_LONG recommendation. Learn from: how often the chosen action matched "
             "the counterfactual best action, repeated wrong-side decisions, whether one direction "
             "was systematically better, whether FLAT was over- or under-used, whether the daily "

@@ -87,6 +87,8 @@ CR and MDD are percentages; Sharpe is unitless. These are the paper’s selected
 
 Run the commands below in **Bash from the repository root**. Python 3.11 is required for these environment examples. A model name selects its provider automatically; one invocation can accept one or several model names.
 
+MOIRA prompts use `step 001`, `step 002`, etc. instead of calendar dates, restarting at each training replay or test window. Model-facing histories use the same numbering; dates outside that window or without a matching trading step are masked as `step XXX`. This applies to open-weight, hosted and A1–A4 calls. Price/news alignment and saved experiment dates retain the real calendar; no extra command or configuration is needed.
+
 ### Client setup
 
 ```bash

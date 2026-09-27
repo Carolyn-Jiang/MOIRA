@@ -9,6 +9,7 @@ from datetime import date, datetime
 from typing import Dict, List, Mapping, Optional, Sequence, Tuple, Union
 
 from strategies.types import Action, PositionState
+from llm.prompt_time import PromptTime
 
 _PROMPT_DIRNAME = "prompts"
 _PAIR_PROMPT_NAME = "pair_selection.txt"
@@ -316,6 +317,7 @@ class PairTradingLLM:
         }
         self.system_fingerprints = set()
         self._client = None
+        self.prompt_time = PromptTime()
 
         self.pair_prompt = _load_prompt(self.prompts_dir, _PAIR_PROMPT_NAME)
         self.action_prompt = _load_prompt(self.prompts_dir, _ACTION_PROMPT_NAME)
@@ -327,6 +329,13 @@ class PairTradingLLM:
     def set_pair_prompt(self, prompt: str) -> None:
         self.pair_prompt = prompt
 
+    def set_prompt_calendar(self, dates) -> None:
+        """Reset step numbering for a replay or a new train/test window."""
+        self.prompt_time = PromptTime(dates)
+
+    def set_prompt_step(self, day) -> None:
+        self.prompt_time.set_step(day)
+
     def call_text(self, *, system_prompt: str, payload: dict,
                   task_type: Optional[str] = None) -> str:
         """Call the LLM with a system prompt + JSON payload; return raw text.
@@ -335,6 +344,7 @@ class PairTradingLLM:
         (pair selection, trading action, relationship-break, reflections). When a
         ``log_dir`` was configured, the call is recorded (Step 11).
         """
+        system_prompt, payload = self.prompt_time.prepare(system_prompt, payload)
         response = self._call_openai(system_prompt, payload)
         self._log_call(task_type or _infer_task_type(system_prompt),
                        system_prompt, payload, response)
@@ -345,6 +355,7 @@ class PairTradingLLM:
         if not self.log_dir:
             return
         try:
+            system_prompt, payload = self.prompt_time.prepare(system_prompt, payload)
             os.makedirs(self.log_dir, exist_ok=True)
             record = {
                 "timestamp": datetime.utcnow().isoformat() + "Z",
@@ -387,6 +398,9 @@ class PairTradingLLM:
 
         client = self._get_client()
 
+        # Final transport boundary also covers the legacy select_pair/decide_action
+        # entry points. The transformation is idempotent across retries.
+        system_prompt, payload = self.prompt_time.prepare(system_prompt, payload)
         messages = [
             {"role": "system", "content": system_prompt},
             {"role": "user", "content": json.dumps(payload)},
